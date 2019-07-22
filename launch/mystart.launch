@@ -1,0 +1,28 @@
+<!---->
+<launch>
+  <arg name="middlepoint" default="midpc"/>
+  <!--attention: only one of odom or world is used, remap the unused one to any unused topic name-->
+  <node pkg="octomaptest" type="octotest" name="octotest" output="screen">
+    <remap from="inpoints" to="sensors/lidar/points"/><!--Sensor/points-->
+    <remap from="outpoints" to="$(arg middlepoint)"/>
+    <remap from="odom" to="RosAria/pose"/>
+    <remap from="world" to="slam/pose"/>
+    <rosparam command="load" file="$(find octomaptest)/param/params.yaml"/>
+
+    <!-- resolution in meters per pixel -->
+    <!--param name="resolution" value="0.01" /-->
+
+    <!-- name of the fixed frame, needs to be "/map" for SLAM -->
+    <!--param name="frame_id" type="string" value="/odom" /-->
+
+    <!-- max range / depth resolution of the kinect in meter -->
+    <!--param name="sensor_model/max_range" value="50.0" />
+    <param name="latch" value="true" /-->
+
+    <!-- max/min height for occupancy map, should be in meters -->
+    <!--param name="pointcloud_max_z" value="0" />
+    <param name="pointcloud_min_z" value="-5" />
+    <param name="pointcloud_max_x" value="30" />
+    <param name="pointcloud_min_x" value="-0.5" /-->
+  </node>
+</launch>

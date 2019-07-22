@@ -19,7 +19,9 @@ find_package(catkin REQUIRED COMPONENTS
   pcl_conversions
   pcl_ros
   image_transport
-  ai_robot_msgs
+  sensor_msgs
+  octomap_ros
+  octomap_msgs
 )
 
 

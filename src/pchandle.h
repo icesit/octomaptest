@@ -13,6 +13,7 @@
 
 #include <geometry_msgs/Pose.h>
 #include <sensor_msgs/PointCloud2.h>
+#include <geometry_msgs/Pose.h>
 #include <nav_msgs/Odometry.h>
 #include <geometry_msgs/PoseStamped.h>
 
@@ -20,6 +21,15 @@
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/filters/filter.h>
 #include <pcl/common/transforms.h>
+#include <pcl/filters/passthrough.h>
+
+#include <octomap_msgs/Octomap.h>
+#include <octomap_msgs/GetOctomap.h>
+#include <octomap_msgs/BoundingBoxQuery.h>
+#include <octomap_msgs/conversions.h>
+#include <octomap_ros/conversions.h>
+#include <octomap/octomap.h>
+#include <octomap/OcTreeKey.h>
 
 
 class pchandle{
@@ -29,17 +39,31 @@ public:
 private:
     ros::NodeHandle nh;
     ros::Subscriber pc_sub;
-    ros::Subscriber odom_sub;
+    ros::Subscriber odom_sub, worldpose_sub;
     ros::Publisher pc_pub;
+    ros::Publisher m_binaryMapPub,m_fullMapPub;
 
     bool getpose;
-    Eigen::Vector3f _t;
-    Eigen::Quaternionf _q;
+    //q and t of body frame in odom frame
+    Eigen::Vector3d _twb;
+    Eigen::Quaterniond _qwb;
+    //q and t of sensor frame in body frame
+    Eigen::Vector3d _tbs;
+    Eigen::Quaterniond _qbs;
+
+    octomap::OcTree* m_octree;
+    std::string m_worldFrameId;
+    double pointcloud_min_x,pointcloud_max_x,pointcloud_max_z,pointcloud_min_z;
 
     void initPubSub();
+    void initParam();
+
+    void publishBinaryOctoMap(const ros::Time& rostime = ros::Time::now()) const;
+    void publishFullOctoMap(const ros::Time& rostime = ros::Time::now()) const;
 
     void pcCB(const sensor_msgs::PointCloud2ConstPtr& msg);
     void odomCB(const nav_msgs::OdometryConstPtr & msg);
+    void worldCB(const geometry_msgs::PoseStampedConstPtr & msg);
 };
 
 

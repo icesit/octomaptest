@@ -1,0 +1,27 @@
+# q and t of sensor frame in base frame, the base to world is subscribed from topic
+qbs_w: 1.0
+qbs_x: 0.0
+qbs_y: 0.0
+qbs_z: 0.0
+
+tbs_x: -0.15
+tbs_y: 0.0
+tbs_z: 0.3
+
+# octomap param
+resolution: 0.1
+sensor_model/max_range: 30
+sensor_model/hit: 0.7
+sensor_model/miss: 0.4
+sensor_model/min: 0.12
+sensor_model/max: 0.97
+
+# /odom---(odometry); /slam---(pose)
+world_frame_id: /slam
+
+# points outside the range in base frame is removed
+pointcloud_max_z: 0
+pointcloud_min_z: -5
+pointcloud_max_x: 30
+pointcloud_min_x: -0.5
+
