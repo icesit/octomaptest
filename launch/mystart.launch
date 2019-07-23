@@ -3,7 +3,7 @@
   <arg name="middlepoint" default="midpc"/>
   <!--attention: only one of odom or world is used, remap the unused one to any unused topic name-->
   <node pkg="octomaptest" type="octotest" name="octotest" output="screen">
-    <remap from="inpoints" to="sensors/lidar/points"/><!--Sensor/points-->
+    <remap from="inpoints" to="Sensor/points"/><!--Sensor/points,sensors/lidar/points-->
     <remap from="outpoints" to="$(arg middlepoint)"/>
     <remap from="odom" to="RosAria/pose"/>
     <remap from="world" to="slam/pose"/>

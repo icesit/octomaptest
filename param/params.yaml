@@ -17,7 +17,7 @@ sensor_model/min: 0.12
 sensor_model/max: 0.97
 
 # /odom---(odometry); /slam---(pose)
-world_frame_id: /slam
+world_frame_id: /odom
 
 # points outside the range in base frame is removed
 pointcloud_max_z: 0
@@ -25,3 +25,11 @@ pointcloud_min_z: -5
 pointcloud_max_x: 30
 pointcloud_min_x: -0.5
 
+# detect area in sensor origin and sensor yaw
+detect_minx: 0
+detect_maxx: 3
+detect_miny: -3
+detect_maxy: 3
+detect_minz: -1
+detect_maxz: 0
+detect_resolution: 0.1

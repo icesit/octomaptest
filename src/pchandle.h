@@ -17,6 +17,10 @@
 #include <nav_msgs/Odometry.h>
 #include <geometry_msgs/PoseStamped.h>
 
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/core/core.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+
 #include <pcl/point_types.h>
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/filters/filter.h>
@@ -31,6 +35,7 @@
 #include <octomap/octomap.h>
 #include <octomap/OcTreeKey.h>
 
+using namespace std;
 
 class pchandle{
 public:
@@ -55,6 +60,9 @@ private:
     std::string m_worldFrameId;
     double pointcloud_min_x,pointcloud_max_x,pointcloud_max_z,pointcloud_min_z;
 
+    double detect_resolution, detect_minx, detect_maxx, detect_miny, detect_maxy, detect_minz, detect_maxz;
+    cv::Mat height_im;
+
     void initPubSub();
     void initParam();
 
@@ -64,6 +72,8 @@ private:
     void pcCB(const sensor_msgs::PointCloud2ConstPtr& msg);
     void odomCB(const nav_msgs::OdometryConstPtr & msg);
     void worldCB(const geometry_msgs::PoseStampedConstPtr & msg);
+
+    void project2Dheightmap();
 };
 
 

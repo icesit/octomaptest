@@ -58,6 +58,18 @@ void pchandle::initParam(){
     m_octree->setProbMiss(probMiss);
     m_octree->setClampingThresMin(thresMin);
     m_octree->setClampingThresMax(thresMax);
+
+    nh.param(nodename+"detect_minx", detect_minx, 0.0);
+    nh.param(nodename+"detect_maxx", detect_maxx, 3.0);
+    nh.param(nodename+"detect_miny", detect_miny, -3.0);
+    nh.param(nodename+"detect_maxy", detect_maxy, 3.0);
+    nh.param(nodename+"detect_minz", detect_minz, -1.0);
+    nh.param(nodename+"detect_maxz", detect_maxz, 0.0);
+    nh.param(nodename+"detect_resolution", detect_resolution, 0.1);
+    int row = int((detect_maxx - detect_minx) / detect_resolution)+1,
+        col = int((detect_maxy - detect_miny) / detect_resolution)+1;
+    height_im = cv::Mat(row, col, CV_8UC3, cv::Scalar(0,0,0)).clone();
+    cv::namedWindow("height_im", 0);
 }
 
 // point cloud in sensor frame
@@ -68,19 +80,7 @@ void pchandle::pcCB(const sensor_msgs::PointCloud2ConstPtr& msg){
 
     // turn pointcloud to world frame
     Eigen::Vector3d _tws = _qwb*_tbs + _twb;
-//    Eigen::Quaterniond _qws = _qwb*_qbs;
-    /*
-//    std::cout<<_qws.w()<<","<<_qws.x()<<","<<_qws.y()<<","<<_qws.z()<<",||"<<_qbs.w()<<","<<_qbs.x()<<","<<_qbs.y()<<","<<_qbs.z()<<",||"<<_qwb.w()<<","<<_qwb.x()<<","<<_qwb.y()<<","<<_qwb.z()<<std::endl;
-    //turn points from body frame to "world" frame
-    pcl::PointCloud<pcl::PointXYZ> oripc, dstpc;
-    pcl::fromROSMsg(*msg, oripc);
-    pcl::transformPointCloud(oripc, dstpc, _tws, _qws);
-    */
-    //publish it to octomap
-//    sensor_msgs::PointCloud2 outmsg;
-//    pcl::toROSMsg(dstpc, outmsg);
-//    outmsg.header.frame_id = "odom";
-//    pc_pub.publish(outmsg);
+    Eigen::Quaterniond _qws = _qwb*_qbs;
 
     //turn to base frame
     pcl::PointCloud<pcl::PointXYZ> oripc, dstpc;
@@ -109,12 +109,61 @@ void pchandle::pcCB(const sensor_msgs::PointCloud2ConstPtr& msg){
     octomap::pointCloud2ToOctomap(tmp, octpointcloud);
     m_octree->insertPointCloud(octpointcloud, sensorOrigin);
 
-    //todo: turn octomap into 2d grid map
+    project2Dheightmap();
 
     //publish
     ros::Time rostime = ros::Time::now();
     publishBinaryOctoMap(rostime);
     publishFullOctoMap(rostime);
+}
+
+void pchandle::project2Dheightmap(){
+    //turn octomap into 2d grid map in base frame
+    int depth = m_octree->getTreeDepth();
+    bool occu_flag = false;
+
+    Eigen::Vector3d pt, pt_w;
+    octomap::OcTreeKey octk;
+    octomap::OcTreeNode* node;
+    int im_c, im_r;
+    //cout<<"get pc"<<endl;
+    for(double _x=detect_minx; _x<detect_maxx;){
+        pt(0) = _x;
+        // real coord in base frame to image coord
+        im_r = height_im.rows-1 - int((_x+0.01-detect_minx)/detect_resolution);
+        //cout<<_x<<","<<im_r<<endl;
+        for(double _y=detect_miny; _y<detect_maxy;){
+            pt(1) = _y;
+            // real coord in base frame to image coord
+            im_c = height_im.cols-1 - int((_y-detect_miny)/detect_resolution);
+            //cout<<"imcr:"<<im_c<<","<<im_r<<endl;
+            height_im.at<cv::Vec3b>(im_r,im_c) = cv::Vec3b(0,0,0);
+            for(double _z=detect_maxz; _z>detect_minz;){
+                pt(2) = _z;
+                // find occupied node from top to down
+                // if this grid is occupied, record the height on 2d map
+                //cout<<"ori:"<<pt(0)<<","<<pt(1)<<","<<pt(2)<<";";
+                pt_w = _qwb * pt +_twb;
+                //cout<<"dst:"<<pt_w(0)<<","<<pt_w(1)<<","<<pt_w(2)<<endl;
+                octk = m_octree->coordToKey(pt_w(0),pt_w(1),pt_w(2),depth);
+                node = m_octree->search(octk);
+                if(node){
+                    occu_flag = m_octree->isNodeOccupied(node);
+                    if(occu_flag){
+                        //cout<<"occupied"<<endl;
+                        int value = int((_z - detect_minz)/(detect_maxz - detect_minz)*255);
+                        height_im.at<cv::Vec3b>(im_r,im_c) = cv::Vec3b(0,0,value);
+                        break;
+                    }
+                }
+                _z -= detect_resolution;
+            }
+            _y += detect_resolution;
+        }
+        _x += detect_resolution;
+    }
+    cv::imshow("height_im", height_im);
+    cv::waitKey(1);
 }
 
 void pchandle::odomCB(const nav_msgs::OdometryConstPtr & msg){
