@@ -5,7 +5,12 @@ int main(int argc, char** argv){
     ros::NodeHandle nh;
     pchandle pch(nh);
     ROS_INFO("start");
-    ros::spin();
+    ros::Rate rate = ros::Rate(20);
+    while(ros::ok()){
+        pch.render();
+        ros::spinOnce();
+    }
+    ROS_INFO("quit");
     ros::shutdown();
     return 0;
 }

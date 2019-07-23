@@ -41,6 +41,8 @@ class pchandle{
 public:
     pchandle(ros::NodeHandle &_n);
     ~pchandle();
+
+    void render();
 private:
     ros::NodeHandle nh;
     ros::Subscriber pc_sub;

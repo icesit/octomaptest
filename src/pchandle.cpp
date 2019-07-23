@@ -15,6 +15,11 @@ pchandle::~pchandle(){
     }
 }
 
+void pchandle::render(){
+    cv::imshow("height_im", height_im);
+    cv::waitKey(1);
+}
+
 void pchandle::initPubSub(){
     pc_sub = nh.subscribe("/inpoints", 1, &pchandle::pcCB, this);
     if(m_worldFrameId == "/odom"){
@@ -126,25 +131,27 @@ void pchandle::project2Dheightmap(){
     octomap::OcTreeKey octk;
     octomap::OcTreeNode* node;
     int im_c, im_r;
-    //cout<<"get pc"<<endl;
+//    cout<<"get pc"<<endl;
+    Eigen::Vector3d _twb_f = _twb;
+    _twb_f(3) = 0;
     for(double _x=detect_minx; _x<detect_maxx;){
         pt(0) = _x;
         // real coord in base frame to image coord
         im_r = height_im.rows-1 - int((_x+0.01-detect_minx)/detect_resolution);
-        //cout<<_x<<","<<im_r<<endl;
+//        cout<<_x<<","<<im_r<<endl;
         for(double _y=detect_miny; _y<detect_maxy;){
             pt(1) = _y;
             // real coord in base frame to image coord
-            im_c = height_im.cols-1 - int((_y-detect_miny)/detect_resolution);
-            //cout<<"imcr:"<<im_c<<","<<im_r<<endl;
+            im_c = height_im.cols-1 - int((_y+0.01-detect_miny)/detect_resolution);
+//            cout<<"imcr:"<<im_c<<","<<im_r<<endl;
             height_im.at<cv::Vec3b>(im_r,im_c) = cv::Vec3b(0,0,0);
             for(double _z=detect_maxz; _z>detect_minz;){
                 pt(2) = _z;
                 // find occupied node from top to down
                 // if this grid is occupied, record the height on 2d map
-                //cout<<"ori:"<<pt(0)<<","<<pt(1)<<","<<pt(2)<<";";
-                pt_w = _qwb * pt +_twb;
-                //cout<<"dst:"<<pt_w(0)<<","<<pt_w(1)<<","<<pt_w(2)<<endl;
+//                cout<<"ori:"<<pt(0)<<","<<pt(1)<<","<<pt(2)<<";";
+                pt_w = _qwb * pt +_twb_f;
+//                cout<<"dst:"<<pt_w(0)<<","<<pt_w(1)<<","<<pt_w(2)<<endl;
                 octk = m_octree->coordToKey(pt_w(0),pt_w(1),pt_w(2),depth);
                 node = m_octree->search(octk);
                 if(node){
@@ -162,8 +169,6 @@ void pchandle::project2Dheightmap(){
         }
         _x += detect_resolution;
     }
-    cv::imshow("height_im", height_im);
-    cv::waitKey(1);
 }
 
 void pchandle::odomCB(const nav_msgs::OdometryConstPtr & msg){
