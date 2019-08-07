@@ -9,7 +9,7 @@ tbs_y: 0.0
 tbs_z: 0.3
 
 # octomap param
-resolution: 0.1
+resolution: 0.2
 sensor_model/max_range: 30
 sensor_model/hit: 0.7
 sensor_model/miss: 0.4
@@ -22,14 +22,18 @@ world_frame_id: /slam
 # points outside the range in base frame is removed
 pointcloud_max_z: 0
 pointcloud_min_z: -5
-pointcloud_max_x: 30
+pointcloud_max_x: 15
 pointcloud_min_x: -0.5
+pointcloud_max_y: 15
+pointcloud_min_y: -15
 
-# detect area in sensor origin and sensor yaw
+# detect area in body origin and body yaw
 detect_minx: 0
 detect_maxx: 3
 detect_miny: -3
 detect_maxy: 3
 detect_minz: -1
-detect_maxz: 0
+detect_maxz: 1
 detect_resolution: 0.1
+# pass_thresh/255*(detect_maxz-detect_minz) = pass_height, 12 pass_thresh is a little smaller than 0.1m
+pass_thresh: 24

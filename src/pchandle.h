@@ -26,6 +26,11 @@
 #include <pcl/filters/filter.h>
 #include <pcl/common/transforms.h>
 #include <pcl/filters/passthrough.h>
+#include <pcl/surface/gp3.h>
+#include <pcl/io/pcd_io.h>
+#include <pcl/kdtree/kdtree_flann.h>
+#include <pcl/features/normal_3d.h>
+#include <pcl/visualization/pcl_visualizer.h>
 
 #include <octomap_msgs/Octomap.h>
 #include <octomap_msgs/GetOctomap.h>
@@ -60,10 +65,15 @@ private:
 
     octomap::OcTree* m_octree;
     std::string m_worldFrameId;
-    double pointcloud_min_x,pointcloud_max_x,pointcloud_max_z,pointcloud_min_z;
+    double pointcloud_min_x,pointcloud_max_x,pointcloud_max_z,pointcloud_min_z,pointcloud_max_y,pointcloud_min_y;
 
+    //2d map
     double detect_resolution, detect_minx, detect_maxx, detect_miny, detect_maxy, detect_minz, detect_maxz;
-    cv::Mat height_im;
+    cv::Mat height_im, passable_im;
+    int pass_thresh;
+
+    bool firstsubpc;
+    int v1,v2;
 
     void initPubSub();
     void initParam();
